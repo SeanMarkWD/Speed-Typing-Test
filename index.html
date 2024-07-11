@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Speed Test</title>
+    <style>
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        .current-word {
+            background-color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="textDisplay"></div>
+    <textarea id="textInput" placeholder="Start typing here..."></textarea>
+    <p>Time remaining: <span id="timeRemaining">60</span> seconds</p>
+    <p id="wpmDisplay">WPM: </p>
+    <p id="accuracyDisplay">Accuracy: </p>
+    <script type="module" src="scripts/app.js"></script>
+</body>
+
+</html>
