@@ -93,17 +93,22 @@ function setupTypingTest() {
     });
 
     function resetTest() {
+        textInput.value = '';
+        wpmDisplay.textContent = 'WPM: ';
+        accuracyDisplay.textContent = 'Accuracy: ';
+        document.getElementById('timeRemaining').textContent = '60';
+        textInput.disabled = false;
+        timerStarted = false;
+        correctWordsCount = 0;
+        totalWordsCount = 0;
+        clearInterval(intervalId);
+        highlightText('', textDisplay.textContent, textDisplay); // Clear highlighting
+    }
+
+    function restartTest() {
         fetchRandomText().then(newText => {
             displayText(newText, textDisplay);
-            textInput.value = '';
-            wpmDisplay.textContent = 'WPM: ';
-            accuracyDisplay.textContent = 'Accuracy: ';
-            document.getElementById('timeRemaining').textContent = '60';
-            textInput.disabled = false;
-            timerStarted = false;
-            correctWordsCount = 0;
-            totalWordsCount = 0;
-            clearInterval(intervalId);
+            resetTest();
         });
     }
 
