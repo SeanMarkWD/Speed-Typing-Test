@@ -48,10 +48,42 @@ function setupTypingTest() {
     const accuracyDisplay = document.getElementById('accuracyDisplay');
     const resetButton = document.getElementById('resetButton');
     const metricsDisplay = document.getElementById('metricsDisplay');
+    const metricsChart = document.getElementById('metricsChart').getContext('2d');
     let timerStarted = false;
     let correctWordsCount = 0;
     let totalWordsCount = 0;
     let intervalId;
+
+    let chart = new Chart(metricsChart, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'WPM',
+                borderColor: 'blue',
+                data: [],
+                fill: false
+            }, {
+                label: 'Accuracy (%)',
+                borderColor: 'green',
+                data: [],
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'minute'
+                    }
+                },
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 
     textInput.addEventListener('input', function () {
         const typedText = textInput.value;
@@ -87,7 +119,7 @@ function setupTypingTest() {
         correctWordsCount = 0;
         totalWordsCount = 0;
         clearInterval(intervalId);
-        highlightText('', textDisplay.textContent, textDisplay); // Clear highlighting
+        highlightText('', textDisplay.textContent, textDisplay);
     }
 
     function restartTest() {
@@ -108,6 +140,7 @@ function setupTypingTest() {
         // Store the metrics in local storage
         storeMetrics(wpm, accuracy);
         displayStoredMetrics();
+        updateChart(wpm, accuracy);
     }
 
     function startTimer() {
@@ -140,8 +173,27 @@ function setupTypingTest() {
         });
     }
 
-    // Display stored metrics on load
+    function updateChart(wpm, accuracy) {
+        const now = new Date();
+        chart.data.labels.push(now);
+        chart.data.datasets[0].data.push(wpm);
+        chart.data.datasets[1].data.push(accuracy);
+        chart.update();
+    }
+
     displayStoredMetrics();
+    loadChartData();
+
+    function loadChartData() {
+        let metrics = JSON.parse(localStorage.getItem('typingMetrics')) || [];
+        metrics.forEach(metric => {
+            const date = new Date(metric.date);
+            chart.data.labels.push(date);
+            chart.data.datasets[0].data.push(metric.wpm);
+            chart.data.datasets[1].data.push(metric.accuracy);
+        });
+        chart.update();
+    }
 }
 
 window.onload = function () {
