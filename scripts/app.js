@@ -84,6 +84,14 @@ function setupTypingTest() {
         resetTest();
     });
 
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            restartTest();
+        } else if (event.key === 'Escape') {
+            resetTest();
+        }
+    });
+
     function resetTest() {
         fetchRandomText().then(newText => {
             displayText(newText, textDisplay);
