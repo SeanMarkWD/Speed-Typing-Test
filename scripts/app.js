@@ -19,11 +19,14 @@ function highlightText(inputText, originalText, containerElement) {
     const words = originalText.split(/\s+/);
     let displayHTML = '';
     let typedWords = inputText.split(/\s+/);
+    let correctWordsCount = 0;
+    let totalWordsCount = typedWords.length;
 
     for (let i = 0; i < words.length; i++) {
         if (i < typedWords.length) {
             if (words[i] === typedWords[i]) {
                 displayHTML += `<span class="correct">${words[i]}</span> `;
+                correctWordsCount++;
             } else if (i === typedWords.length - 1) {
                 displayHTML += `<span class="current-word">${words[i]}</span> `;
             } else {
@@ -35,6 +38,7 @@ function highlightText(inputText, originalText, containerElement) {
     }
 
     containerElement.innerHTML = displayHTML.trim();
+    return { correctWordsCount, totalWordsCount };
 }
 
 function setupTypingTest() {
@@ -43,6 +47,7 @@ function setupTypingTest() {
     const wpmDisplay = document.getElementById('wpmDisplay');
     const accuracyDisplay = document.getElementById('accuracyDisplay');
     const resetButton = document.getElementById('resetButton');
+    const metricsDisplay = document.getElementById('metricsDisplay');
     let timerStarted = false;
     let correctWordsCount = 0;
     let totalWordsCount = 0;
@@ -50,29 +55,9 @@ function setupTypingTest() {
 
     textInput.addEventListener('input', function () {
         const typedText = textInput.value;
-        const words = textDisplay.textContent.split(/\s+/);
-        let displayHTML = '';
-        let typedWords = typedText.split(/\s+/);
-
-        correctWordsCount = 0;
-        totalWordsCount = typedWords.length;
-
-        for (let i = 0; i < words.length; i++) {
-            if (i < typedWords.length) {
-                if (words[i] === typedWords[i]) {
-                    displayHTML += `<span class="correct">${words[i]}</span> `;
-                    correctWordsCount++;
-                } else if (i === typedWords.length - 1) {
-                    displayHTML += `<span class="current-word">${words[i]}</span> `;
-                } else {
-                    displayHTML += `<span class="incorrect">${words[i]}</span> `;
-                }
-            } else {
-                displayHTML += words[i] + " ";
-            }
-        }
-
-        textDisplay.innerHTML = displayHTML.trim();
+        const result = highlightText(typedText, textDisplay.textContent, textDisplay);
+        correctWordsCount = result.correctWordsCount;
+        totalWordsCount = result.totalWordsCount;
 
         if (!timerStarted && typedText.length > 0) {
             startTimer();
@@ -119,6 +104,10 @@ function setupTypingTest() {
 
         wpmDisplay.textContent = `WPM: ${wpm.toFixed(2)}`;
         accuracyDisplay.textContent = `Accuracy: ${accuracy.toFixed(2)}%`;
+
+        // Store the metrics in local storage
+        storeMetrics(wpm, accuracy);
+        displayStoredMetrics();
     }
 
     function startTimer() {
@@ -135,6 +124,24 @@ function setupTypingTest() {
             }
         }, 1000);
     }
+
+
+    function storeMetrics(wpm, accuracy) {
+        let metrics = JSON.parse(localStorage.getItem('typingMetrics')) || [];
+        metrics.push({ wpm, accuracy, date: new Date().toLocaleString() });
+        localStorage.setItem('typingMetrics', JSON.stringify(metrics));
+    }
+
+    function displayStoredMetrics() {
+        let metrics = JSON.parse(localStorage.getItem('typingMetrics')) || [];
+        metricsDisplay.innerHTML = '<h3>Previous Metrics</h3>';
+        metrics.forEach(metric => {
+            metricsDisplay.innerHTML += `<p>${metric.date} - WPM: ${metric.wpm.toFixed(2)}, Accuracy: ${metric.accuracy.toFixed(2)}%</p>`;
+        });
+    }
+
+    // Display stored metrics on load
+    displayStoredMetrics();
 }
 
 window.onload = function () {
