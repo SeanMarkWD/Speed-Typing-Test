@@ -48,45 +48,16 @@ function setupTypingTest() {
     const accuracyDisplay = document.getElementById('accuracyDisplay');
     const resetButton = document.getElementById('resetButton');
     const metricsDisplay = document.getElementById('metricsDisplay');
-    const metricsChart = document.getElementById('metricsChart').getContext('2d');
+    const improvementDisplay = document.getElementById('improvementDisplay'); // Add an element to show improvement
     let timerStarted = false;
     let correctWordsCount = 0;
     let totalWordsCount = 0;
     let intervalId;
 
-    let chart = new Chart(metricsChart, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'WPM',
-                borderColor: 'blue',
-                data: [],
-                fill: false
-            }, {
-                label: 'Accuracy (%)',
-                borderColor: 'green',
-                data: [],
-                fill: false
-            }]
-        },
-        options: {
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'minute'
-                    }
-                },
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
     textInput.addEventListener('input', function () {
         const typedText = textInput.value;
+        if (!typedText.length) return; // Ensure text input is not empty to prevent null errors
+
         const result = highlightText(typedText, textDisplay.textContent, textDisplay);
         correctWordsCount = result.correctWordsCount;
         totalWordsCount = result.totalWordsCount;
@@ -113,6 +84,7 @@ function setupTypingTest() {
         textInput.value = '';
         wpmDisplay.textContent = 'WPM: ';
         accuracyDisplay.textContent = 'Accuracy: ';
+        improvementDisplay.textContent = ''; // Clear the improvement display
         document.getElementById('timeRemaining').textContent = '60';
         textInput.disabled = false;
         timerStarted = false;
@@ -130,17 +102,28 @@ function setupTypingTest() {
     }
 
     function displayResults() {
-        const timeSpentMinutes = 1;
-        const wpm = correctWordsCount / timeSpentMinutes;
+        const timeSpentMinutes = 1; // This should be calculated based on the actual time spent
+        const wpm = Math.round(correctWordsCount / timeSpentMinutes);
         const accuracy = (correctWordsCount / totalWordsCount) * 100;
 
-        wpmDisplay.textContent = `WPM: ${wpm.toFixed(2)}`;
-        accuracyDisplay.textContent = `Accuracy: ${accuracy.toFixed(2)}%`;
+        wpmDisplay.textContent = `WPM: ${wpm}`;
+        accuracyDisplay.textContent = `Accuracy: ${accuracy.toFixed(1)}%`;
+
+        // Compare with previous attempt
+        const previousMetrics = getPreviousMetrics();
+        let improvementMessage = '';
+        if (previousMetrics) {
+            const wpmImprovement = wpm > previousMetrics.wpm ? 'increased' : 'decreased';
+            const accuracyImprovement = accuracy > previousMetrics.accuracy ? 'increased' : 'decreased';
+            improvementMessage = `WPM has ${wpmImprovement} from ${previousMetrics.wpm} to ${wpm}. Accuracy has ${accuracyImprovement} from ${previousMetrics.accuracy.toFixed(1)}% to ${accuracy.toFixed(1)}%.`;
+        } else {
+            improvementMessage = 'This is your first attempt. Keep going!';
+        }
+        improvementDisplay.textContent = improvementMessage;
 
         // Store the metrics in local storage
         storeMetrics(wpm, accuracy);
         displayStoredMetrics();
-        updateChart(wpm, accuracy);
     }
 
     function startTimer() {
@@ -158,42 +141,69 @@ function setupTypingTest() {
         }, 1000);
     }
 
-
     function storeMetrics(wpm, accuracy) {
         let metrics = JSON.parse(localStorage.getItem('typingMetrics')) || [];
-        metrics.push({ wpm, accuracy, date: new Date().toLocaleString() });
+        metrics.push({ wpm, accuracy, date: new Date().toISOString() });
         localStorage.setItem('typingMetrics', JSON.stringify(metrics));
+    }
+
+    function getPreviousMetrics() {
+        let metrics = JSON.parse(localStorage.getItem('typingMetrics')) || [];
+        return metrics.length > 0 ? metrics[metrics.length - 1] : null;
     }
 
     function displayStoredMetrics() {
         let metrics = JSON.parse(localStorage.getItem('typingMetrics')) || [];
-        metricsDisplay.innerHTML = '<h3>Previous Metrics</h3>';
-        metrics.forEach(metric => {
-            metricsDisplay.innerHTML += `<p>${metric.date} - WPM: ${metric.wpm.toFixed(2)}, Accuracy: ${metric.accuracy.toFixed(2)}%</p>`;
-        });
-    }
 
-    function updateChart(wpm, accuracy) {
-        const now = new Date();
-        chart.data.labels.push(now);
-        chart.data.datasets[0].data.push(wpm);
-        chart.data.datasets[1].data.push(accuracy);
-        chart.update();
+        // Create the table and its header
+        let tableHTML = `
+        <h3>Previous Metrics</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>WPM</th>
+                    <th>Accuracy</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+        // Populate the table rows with metrics data
+        metrics.forEach(metric => {
+            const metricDate = new Date(metric.date);
+            const formattedDate = metricDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            const formattedTime = metricDate.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            tableHTML += `
+            <tr>
+                <td>${formattedDate}</td>
+                <td>${formattedTime}</td>
+                <td>${metric.wpm}</td>
+                <td>${metric.accuracy.toFixed(1)}%</td>
+            </tr>
+        `;
+        });
+
+        // Close the table tags
+        tableHTML += `
+            </tbody>
+        </table>
+    `;
+
+        // Set the innerHTML of the metricsDisplay element to the table
+        metricsDisplay.innerHTML = tableHTML;
     }
 
     displayStoredMetrics();
-    loadChartData();
-
-    function loadChartData() {
-        let metrics = JSON.parse(localStorage.getItem('typingMetrics')) || [];
-        metrics.forEach(metric => {
-            const date = new Date(metric.date);
-            chart.data.labels.push(date);
-            chart.data.datasets[0].data.push(metric.wpm);
-            chart.data.datasets[1].data.push(metric.accuracy);
-        });
-        chart.update();
-    }
 }
 
 window.onload = function () {
