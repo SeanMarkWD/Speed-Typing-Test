@@ -113,9 +113,20 @@ function setupTypingTest() {
         const previousMetrics = getPreviousMetrics();
         let improvementMessage = '';
         if (previousMetrics) {
-            const wpmImprovement = wpm > previousMetrics.wpm ? 'increased' : 'decreased';
-            const accuracyImprovement = accuracy > previousMetrics.accuracy ? 'increased' : 'decreased';
-            improvementMessage = `WPM has ${wpmImprovement} from ${previousMetrics.wpm} to ${wpm}. Accuracy has ${accuracyImprovement} from ${previousMetrics.accuracy.toFixed(1)}% to ${accuracy.toFixed(1)}%.`;
+            const wpmImprovement = wpm > previousMetrics.wpm ? 'increased' : (wpm < previousMetrics.wpm ? 'decreased' : 'remains the same');
+            const accuracyImprovement = accuracy > previousMetrics.accuracy ? 'increased' : (accuracy < previousMetrics.accuracy ? 'decreased' : 'remains the same');
+
+            improvementMessage = `WPM has ${wpmImprovement}`;
+            if (wpmImprovement !== 'remains the same') {
+                improvementMessage += ` from ${previousMetrics.wpm} to ${wpm}`;
+            }
+
+            improvementMessage += `. Accuracy ${accuracyImprovement}`;
+            if (accuracyImprovement !== 'remains the same') {
+                improvementMessage += ` from ${previousMetrics.accuracy.toFixed(1)}% to ${accuracy.toFixed(1)}%`;
+            } else {
+                improvementMessage += ` at ${accuracy.toFixed(1)}%`;
+            }
         } else {
             improvementMessage = 'This is your first attempt. Keep going!';
         }
