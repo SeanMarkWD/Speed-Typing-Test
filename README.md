@@ -24,7 +24,7 @@ Typing Speed Test is a web application that allows users to test their typing sp
 1. **Clone the repository:**
 
     ```sh
-    git clone [https://github.com/your-username/typing-speed-test.git](https://github.com/SeanMarkWD/Speed-Typing-Test.git)
+    git clone (https://github.com/SeanMarkWD/Speed-Typing-Test.git)
     cd typing-speed-test
     ```
 
