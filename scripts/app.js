@@ -181,8 +181,9 @@ function setupTypingTest() {
             <tbody>
     `;
 
-        // Populate the table rows with metrics data
-        metrics.forEach(metric => {
+        const displayedMetrics = metrics.slice(-10);
+
+        displayedMetrics.forEach(metric => {
             const metricDate = new Date(metric.date);
             const formattedDate = metricDate.toLocaleDateString('en-US', {
                 year: 'numeric',
