@@ -1,16 +1,16 @@
-import { fetchRandomText, displayText } from './fetchText.js';
-import { highlightText } from './highlightText.js';
-import { storeMetrics, getPreviousMetrics, displayStoredMetrics } from './metrics.js';
-import { startTimer, stopTimer } from './timer.js';
+import { fetchRandomText, displayText } from './modules/fetchText.js';
+import { highlightText } from './modules/highlightText.js';
+import { storeMetrics, getPreviousMetrics, displayStoredMetrics } from './modules/metrics.js';
+import { startTimer, stopTimer } from './modules/timer.js';
 
-function setupTypingTest() {
+document.addEventListener('DOMContentLoaded', async () => {
     const textInput = document.getElementById('textInput');
     const textDisplay = document.getElementById('textDisplay');
     const wpmDisplay = document.getElementById('wpmDisplay');
     const accuracyDisplay = document.getElementById('accuracyDisplay');
     const resetButton = document.getElementById('resetButton');
+    const improvementDisplay = document.getElementById('improvementDisplay');
     const metricsDisplay = document.getElementById('metricsDisplay');
-    const improvementDisplay = document.getElementById('improvementDisplay'); // Add an element to show improvement
     let timerStarted = false;
     let correctWordsCount = 0;
     let totalWordsCount = 0;
@@ -18,14 +18,20 @@ function setupTypingTest() {
 
     textInput.addEventListener('input', function () {
         const typedText = textInput.value;
-        if (!typedText.length) return; // Ensure text input is not empty to prevent null errors
+        if (!typedText.length) return;
 
         const result = highlightText(typedText, textDisplay.textContent, textDisplay);
         correctWordsCount = result.correctWordsCount;
         totalWordsCount = result.totalWordsCount;
 
         if (!timerStarted && typedText.length > 0) {
-            startTimer();
+            intervalId = startTimer(
+                (timeRemaining) => document.getElementById('timeRemaining').textContent = timeRemaining,
+                () => {
+                    displayResults();
+                    alert("Time is up!");
+                }
+            );
             timerStarted = true;
         }
     });
@@ -42,28 +48,7 @@ function setupTypingTest() {
         }
     });
 
-    function resetTest() {
-        textInput.value = '';
-        wpmDisplay.textContent = 'WPM: ';
-        accuracyDisplay.textContent = 'Accuracy: ';
-        improvementDisplay.textContent = ''; // Clear the improvement display
-        document.getElementById('timeRemaining').textContent = '60';
-        textInput.disabled = false;
-        timerStarted = false;
-        correctWordsCount = 0;
-        totalWordsCount = 0;
-        clearInterval(intervalId);
-        highlightText('', textDisplay.textContent, textDisplay);
-    }
-
-    function restartTest() {
-        fetchRandomText().then(newText => {
-            displayText(newText, textDisplay);
-            resetTest();
-        });
-    }
-
-    function displayResults() {
+    async function displayResults() {
         const timeSpentMinutes = 1; // This should be calculated based on the actual time spent
         const wpm = Math.round(correctWordsCount / timeSpentMinutes);
         const accuracy = (correctWordsCount / totalWordsCount) * 100;
@@ -96,17 +81,32 @@ function setupTypingTest() {
 
         // Store the metrics in local storage
         storeMetrics(wpm, accuracy);
-        displayStoredMetrics();
+        displayStoredMetrics(metricsDisplay);
     }
 
+    function resetTest() {
+        textInput.value = '';
+        wpmDisplay.textContent = 'WPM: ';
+        accuracyDisplay.textContent = 'Accuracy: ';
+        improvementDisplay.textContent = ''; // Clear the improvement display
+        document.getElementById('timeRemaining').textContent = '60';
+        textInput.disabled = false;
+        timerStarted = false;
+        correctWordsCount = 0;
+        totalWordsCount = 0;
+        stopTimer(intervalId);
+        highlightText('', textDisplay.textContent, textDisplay);
+    }
 
+    function restartTest() {
+        fetchRandomText().then(newText => {
+            displayText(newText, textDisplay);
+            resetTest();
+        });
+    }
 
-    displayStoredMetrics();
-}
-
-window.onload = function () {
-    fetchRandomText().then(text => {
-        displayText(text, document.getElementById('textDisplay'));
-    });
-    setupTypingTest();
-};
+    // Initial setup
+    const text = await fetchRandomText();
+    displayText(text, textDisplay);
+    displayStoredMetrics(metricsDisplay);
+});

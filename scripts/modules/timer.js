@@ -1,4 +1,4 @@
-function startTimer() {
+export function startTimer(callback, endCallback) {
     let timeRemaining = 60;
     intervalId = setInterval(() => {
         if (timeRemaining > 0) {
