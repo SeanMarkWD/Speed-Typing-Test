@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 () => {
                     displayResults();
                     alert("Time is up!");
+                    textInput.disabled = true;
                 }
             );
             timerStarted = true;

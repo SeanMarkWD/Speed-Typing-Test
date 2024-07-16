@@ -27,7 +27,7 @@ export function displayStoredMetrics() {
             <tbody>
     `;
 
-    const displayedMetrics = metrics.slice(-10);
+    const displayedMetrics = metrics.slice().reverse();
 
     displayedMetrics.forEach(metric => {
         const metricDate = new Date(metric.date);
