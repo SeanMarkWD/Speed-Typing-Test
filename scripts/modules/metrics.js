@@ -9,8 +9,13 @@ export function getPreviousMetrics() {
     return metrics.length > 0 ? metrics[metrics.length - 1] : null;
 }
 
-export function displayStoredMetrics() {
+export function displayStoredMetrics(metricsDisplay) {
     let metrics = JSON.parse(localStorage.getItem('typingMetrics')) || [];
+
+    console.log("Metrics to display:", metrics);  // Debugging log
+
+    // Filter out any invalid metrics
+    metrics = metrics.filter(metric => metric && metric.wpm != null && metric.accuracy != null);
 
     // Create the table and its header
     let tableHTML = `
@@ -59,4 +64,6 @@ export function displayStoredMetrics() {
 
     // Set the innerHTML of the metricsDisplay element to the table
     metricsDisplay.innerHTML = tableHTML;
+
+    console.log("Metrics display HTML:", tableHTML);  // Debugging log
 }
